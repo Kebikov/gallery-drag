@@ -8,6 +8,8 @@ class Gallery {
         this.containerNode = element;
         this.size = element.childElementCount;
         this.currentSlide = 0;
+        this.position = 0;
+        this.correctionSwipe = 0;
 
         this.manageHTML = this.manageHTML.bind(this);
         this.setParameters = this.setParameters.bind(this);
@@ -17,10 +19,16 @@ class Gallery {
         this.stopDrag = this.stopDrag.bind(this);
         this.dragging = this.dragging.bind(this);
         this.setStylePosition = this.setStylePosition.bind(this);
+        this.correction = this.correction.bind(this);
 
         this.manageHTML();
         this.setParameters();
         this.setEvents();
+        this.correction();
+    }
+
+    correction() {
+        this.correctionSwipe = this.width * 0.4;
     }
 
     manageHTML() {
@@ -43,7 +51,7 @@ class Gallery {
         const coordsContainer = this.containerNode.getBoundingClientRect();
         this.width = coordsContainer.width;
 
-        this.x = -this.currentSlide * this.width;
+        this.x = this.currentSlide * this.width;
 
         this.lineNode.style.width = `${this.width * this.size}px`;
         Array.from(this.lineNode.children).map(item => item.style.width = `${this.width}px`);
@@ -61,38 +69,69 @@ class Gallery {
     }
 
     resizeGallery() {
-        console.log('res');
         this.setParameters();
     }
 
     startDrag(evt) {
-        this.clickX = evt.pageX;
+        this.click = evt.pageX;
         window.addEventListener('pointermove', this.dragging);
-        //this.lineNode.classList.remove('trans');
+        this.lineNode.classList.remove('trans');
+    }
+
+    dragging(evt) {
+        this.drag = evt.pageX;
+        this.dragShift = this.drag - this.click;
+        console.log('this.dragShift',this.dragShift);
+        this.setStylePosition();
     }
 
     stopDrag() {
         window.removeEventListener('pointermove', this.dragging);
-        if(this.x < 0) {
-            console.log('q',this.x);
-            this.currentSlide = this.currentSlide + 1;
-            console.log('this.currentSlide',this.currentSlide);
-            this.x = -this.currentSlide * this.width;
-            console.log('width',this.width);
-            //this.lineNode.classList.add('trans');
+        if(this.correctionSwipe > this.dragShift && this.dragShift > 0 || 0 > this.dragShift && this.dragShift > -this.correctionSwipe) {
+            this.lineNode.classList.add('trans');
+            this.dragShift = 0;
             this.setStylePosition();
+        }else{
+            if(this.dragShift < 0) {
+                //plus
+                if(this.currentSlide >= this.size - 1) {
+                    this.dragShift = 0;
+                    this.position = (this.size - 1)  * -this.width;
+                    this.currentSlide = this.size - 1;
+                    this.lineNode.classList.add('trans');
+                    this.setStylePosition();
+                }else{
+                    this.dragShift = 0;
+                    this.currentSlide = this.currentSlide + 1;
+                    this.position = -this.currentSlide * this.width;
+                    this.lineNode.classList.add('trans');
+                    this.setStylePosition();
+                }
+            }
+    
+            if(this.dragShift > 0) {
+            //minus
+                if(this.currentSlide <= 0) {
+                    this.dragShift = 0;
+                    this.position = 0;
+                    this.currentSlide = 0;
+                    this.lineNode.classList.add('trans');
+                    this.setStylePosition();
+                }else{
+                    this.dragShift = 0;
+                    this.currentSlide = this.currentSlide - 1;
+                    this.position = -this.currentSlide * this.width;
+                    this.lineNode.classList.add('trans');
+                    this.setStylePosition();
+                }
+            }
         }
-    }
 
-    dragging(evt) {
-        this.dragX = evt.pageX;
-        const dragShift = this.dragX - this.clickX;
-        this.x = dragShift;
-        this.setStylePosition();
+        this.position = this.position + this.dragShift;
     }
 
     setStylePosition() {
-        this.lineNode.style.transform = `translate3d(${this.x}px, 0, 0)`;
+        this.lineNode.style.transform = `translate3d(${this.position + this.dragShift}px, 0, 0)`;
     }
 
     next() {
