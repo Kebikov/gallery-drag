@@ -1,5 +1,6 @@
-new Gallery(document.getElementById('gallery'));
+//new Gallery(document.getElementById('gallery'));
 
+new FnGallery(document.getElementById('gallery'));
 
 
 

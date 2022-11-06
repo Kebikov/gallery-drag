@@ -28,7 +28,7 @@ class Gallery {
     }
 
     correction() {
-        this.correctionSwipe = this.width * 0.4;
+        this.correctionSwipe = this.width * 0.1;
     }
 
     manageHTML() {
